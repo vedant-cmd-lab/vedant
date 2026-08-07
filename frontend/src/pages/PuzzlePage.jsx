@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Play, Pause, SkipForward, Loader2 } from "lucide-react";
+import { Play, Pause, SkipForward, Loader2, RotateCcw } from "lucide-react";
 import { Waveform } from "@/components/Waveform";
 import { VerdictScreen } from "@/components/VerdictScreen";
 import { getToday, getPuzzle, submitGuess, revealAnswer } from "@/lib/api";
@@ -18,6 +18,7 @@ export default function PuzzlePage() {
   const [played, setPlayed] = React.useState(0);
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState(null);
+  const [reloadKey, setReloadKey] = React.useState(0);
   const audioRef = React.useRef(null);
   const solvedAnswerRef = React.useRef(null);
 
@@ -51,7 +52,7 @@ export default function PuzzlePage() {
     return () => {
       alive = false;
     };
-  }, [routeNumber]);
+  }, [routeNumber, reloadKey]);
 
   const stopAudio = React.useCallback(() => {
     const a = audioRef.current;
@@ -148,6 +149,13 @@ export default function PuzzlePage() {
       <div className="px-5 pt-24 text-center">
         <div className="font-display uppercase text-2xl text-sd-copper tracking-tight">Case Sealed</div>
         <p className="text-sd-muted mt-2 text-sm">{error}</p>
+        <button
+          onClick={() => setReloadKey((k) => k + 1)}
+          data-testid="retry-button"
+          className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-md font-display font-bold uppercase tracking-wide bg-sd-gold text-[#1A1108] hover:brightness-105 transition-all"
+        >
+          <RotateCcw className="w-4 h-4" /> Try Again
+        </button>
       </div>
     );
   }
