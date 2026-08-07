@@ -1,0 +1,30 @@
+{
+  "summary": "Frontend-only testing focused on retry/error-recovery fix and Next Case button. All targeted flows pass. Retry button appears on transient /api/puzzle/today failure and successfully reloads the case on click. Verdict screen shows next-case-button only when solved and navigates to /practice; share-button remains gold and visible. Regression checks: Home, /archive, /stats, /practice all render, bottom nav shows 4 items on non-puzzle screens, Practice language chip (Hindi) updates the case with Hindi track (e.g., Kabira).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PuzzlePage.jsx retry uses reloadKey in useEffect deps — clean and correct.",
+    "VerdictScreen next-case-button correctly gated by `solved` prop."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "test_credentials": "N/A (anonymous app)",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Tested via Playwright at REACT_APP_BACKEND_URL. Retry flow uses page.route abort on **/api/puzzle/today then unroute. Case #219 = 'Smells Like Teen Spirit'. To trigger Cold Case, submit 5 wrong MCQs then click skip-button (only 5 wrong options available among 6). Practice chips work; New/reload icon is top-right of practice page.",
+  "verified_flows": [
+    "GET /api/puzzle/today aborted -> Case Sealed + retry-button visible; unroute + click retry -> waveform + Case #219 + 6 mcq-option + submit-guess-button.",
+    "Normal '/' load has no 'Case Sealed' text.",
+    "Solve -> verdict-screen with Solved stamp, share-button + next-case-button visible; click next-case-button -> /practice.",
+    "6 wrong outcomes -> Cold Case stamp, next-case-button absent, share-button present.",
+    "/archive, /stats, /practice render with 4 bottom-nav items.",
+    "Practice Hindi filter chip re-loads a Hindi track."
+  ]
+}
