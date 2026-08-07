@@ -1,11 +1,13 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Share2, Play, Pause } from "lucide-react";
+import { Share2, Play, Pause, ArrowRight } from "lucide-react";
 import { ShareGrid, buildShareText } from "@/components/ShareGrid";
 import { NextCaseTimer } from "@/components/NextCaseTimer";
 import { MAX_ATTEMPTS } from "@/lib/game";
 
 export const VerdictScreen = ({ number, answer, solved, guessResults, score, streak, previewUrl, showNextTimer }) => {
+  const navigate = useNavigate();
   const audioRef = React.useRef(null);
   const [playing, setPlaying] = React.useState(false);
 
@@ -131,6 +133,16 @@ export const VerdictScreen = ({ number, answer, solved, guessResults, score, str
           <Share2 className="w-4 h-4" /> Share the Case
         </button>
       </div>
+
+      {solved && (
+        <button
+          onClick={() => navigate("/practice")}
+          data-testid="next-case-button"
+          className="mt-3 w-full h-12 rounded-md font-display font-bold uppercase tracking-wide text-lg flex items-center justify-center gap-2 bg-sd-elevated border border-sd-hairline text-sd-text hover:bg-sd-surface transition-colors"
+        >
+          Next Case <ArrowRight className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 };
