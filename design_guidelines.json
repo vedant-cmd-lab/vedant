@@ -1,0 +1,135 @@
+{
+  "theme_and_positioning": {
+    "concept": "Detective-noir crossed with the warmth of a Bollywood record sleeve.",
+    "vibe": "Cinematic, moody, and premium. Every round is a 'case', reveals are 'verdicts', history is a 'case file'.",
+    "core_insight": "The satisfying moment is recognizing a song from almost nothing. Guessing in one second is the flex.",
+    "target_audience": "Indian Gen Z and young millennials (18-28), secondary nostalgia listeners (28-45)."
+  },
+  "colors": {
+    "background": {
+      "base": "#0E0D0F",
+      "surface": "#1A1719",
+      "elevated": "#241F22"
+    },
+    "border": {
+      "hairline": "#3A3238"
+    },
+    "text": {
+      "primary": "#F7F1E6",
+      "muted": "#9A9188"
+    },
+    "accent": {
+      "primary_gold": "#F2A93B",
+      "gold_glow": "#FFD07A",
+      "copper": "#C4634A",
+      "verdict_teal": "#3E9E93"
+    },
+    "discipline_rules": [
+      "GOLD DISCIPLINE: Gold appears ONLY on the primary action button, the revealed portion of the waveform, and the active nav item.",
+      "NEVER use gold for icons.",
+      "The app reads as near-monochrome with gold as a scarce, earned accent.",
+      "Use copper (#C4634A) for wrong answers/errors.",
+      "Use verdict teal (#3E9E93) ONLY for solved states."
+    ]
+  },
+  "typography": {
+    "font_families": {
+      "display": "'Barlow Condensed', sans-serif",
+      "body": "'Outfit', sans-serif",
+      "data": "'JetBrains Mono', monospace"
+    },
+    "roles": {
+      "h1_verdict": {
+        "family": "display",
+        "weight": "800",
+        "transform": "uppercase",
+        "tracking": "tracking-tighter",
+        "size": "text-4xl sm:text-5xl"
+      },
+      "body_text": {
+        "family": "body",
+        "weight": "400",
+        "size": "text-base"
+      },
+      "data_monospace": {
+        "family": "data",
+        "weight": "500",
+        "transform": "uppercase",
+        "tracking": "tracking-[0.12em]",
+        "size": "text-sm",
+        "usage": "Case numbers, timers, scores, countdowns."
+      }
+    }
+  },
+  "visual_enhancers": {
+    "lighting": "Use soft radial gradients (using gold_glow #FFD07A at 10-20% opacity) behind the hero waveform like a desk lamp lighting evidence.",
+    "textures": "Subtle noise overlay (grain) on the base background to emulate old record sleeves and noir film.",
+    "shadows": "Hard, sharp drop shadows (neo-brutalist but dark mode) or extremely soft cinematic ambient glows. Avoid default Tailwind soft shadows."
+  },
+  "components": {
+    "waveform_hero": {
+      "description": "The signature element. Full width, tall.",
+      "revealed_state": "Solid primary gold (#F2A93B).",
+      "locked_state": "White/muted at 20% opacity.",
+      "playhead": "Bright gold or white vertical line at the boundary.",
+      "background": "Radial gold glow (#FFD07A) sitting behind it."
+    },
+    "mcq_options": {
+      "description": "Framed as 'suspects/leads'.",
+      "default": "Surface background (#1A1719), hairline border (#3A3238), primary text.",
+      "selected": "Elevated background (#241F22), primary border.",
+      "wrong": "Copper background or border (#C4634A).",
+      "correct": "Verdict teal background or border (#3E9E93)."
+    },
+    "buttons": {
+      "primary": "Solid primary gold (#F2A93B), dark text (inverse). Used sparingly.",
+      "secondary": "Elevated surface (#241F22) with hairline border (#3A3238), primary text (#F7F1E6).",
+      "radius": "Slightly rounded, e.g., rounded-md or rounded-none for a harsher noir look."
+    },
+    "verdict_stamps": {
+      "description": "Appears on the reveal screen.",
+      "style": "Large, angled, uppercase, using display font with tight letter spacing. 'SOLVED' in teal, 'UNSOLVED' in copper."
+    },
+    "emoji_share_grid": {
+      "description": "Spoiler-free block mimicking Wordle.",
+      "format": "Audio blocks showing attempts. 🟩 for teal/correct, 🟥 for copper/wrong, ⬛ for unplayed/locked."
+    },
+    "cards": {
+      "style": "Surface (#1A1719) with hairline border (#3A3238). No default soft shadows.",
+      "padding": "Generous, p-6 or p-8."
+    },
+    "headers": {
+      "rules": "Must have a solid or highly blurred background (bg-[#0E0D0F]/90 backdrop-blur-xl). NEVER use purely transparent backgrounds if content scrolls underneath."
+    }
+  },
+  "layouts": {
+    "mobile_first": "Design primarily for mobile devices (portrait). Constrain max-width on desktop to sm (max-w-md or max-w-lg) to retain the app feel.",
+    "spacing": "Generous spacing. Tailwind scale: p-4 for list items, p-6 to p-8 for layout boundaries.",
+    "grids": "Use 1-column stacks for main flow. Use tight 2-column or 3-column dense grids for stats."
+  },
+  "motion": {
+    "style": "Cinematic and deliberate.",
+    "waveform": "Smooth horizontal fill animation for the playhead and revealed portion.",
+    "verdict": "Stamp effect (scale down, quick opacity fade in, slight rotation).",
+    "hover_states": "Subtle brightness increase or border color shift. NEVER jumpy."
+  },
+  "accessibility": {
+    "contrast": "Ensure primary text (#F7F1E6) on base (#0E0D0F) meets WCAG AAA. Muted text (#9A9188) must meet AA.",
+    "screen_readers": "Waveform must have aria-label describing the track progress. Use aria-live for the timer/score updates."
+  },
+  "instructions_to_main_agent": [
+    "CRITICAL: Do not use standard Shadcn/Tailwind generic colors (e.g., slate, blue). You MUST use the exact hex codes provided in this JSON.",
+    "CRITICAL: Adhere to the GOLD DISCIPLINE. Only the primary button, waveform revealed state, and active nav get the gold color.",
+    "CRITICAL: All generated code should be in .js/.jsx, NOT .tsx (unless typescript is explicitly set up, but the prompt dictates .js).",
+    "All interactive elements MUST have a data-testid attribute in kebab-case, role-based format (e.g., data-testid='submit-guess-button', data-testid='mcq-option').",
+    "DO NOT use generic centered app layouts. Left-align text for readability, center only high-impact hero elements like the waveform or verdict stamp.",
+    "For the audio player, do not call external APIs at runtime. It should expect a pre-stored iTunes preview URL.",
+    "Use Lucide-react for icons, but force them to inherit text-primary or text-muted. Icons are NEVER gold.",
+    "Sonner is recommended for toasts, customized to match the dark noir theme."
+  ],
+  "universal_guidelines": {
+    "aesthetic": "Avoid generic 'AI slop'. Make it look like a curated museum piece or a moody Spotify wrapped.",
+    "depth": "Create depth via color separation (base vs surface vs elevated) and hairlines, rather than massive blurry drop shadows.",
+    "components_reuse": "Use src/components/ui for base components (buttons, dialogs) but heavily customize their Tailwind classes to match this theme."
+  }
+}
