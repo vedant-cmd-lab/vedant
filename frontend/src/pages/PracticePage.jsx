@@ -2,12 +2,15 @@ import React from "react";
 import { toast } from "sonner";
 import { Play, Pause, SkipForward, Loader2, RotateCcw } from "lucide-react";
 import { Waveform } from "@/components/Waveform";
-import { practiceNew, practiceGuess, practiceReveal } from "@/lib/api";
+import { practiceFilters, practiceNew, practiceGuess, practiceReveal } from "@/lib/api";
 import { CLIP_DURATIONS, MAX_ATTEMPTS } from "@/lib/game";
 
 export default function PracticePage() {
   const [session, setSession] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  const [filters, setFilters] = React.useState({ decades: [], languages: [] });
+  const [decade, setDecade] = React.useState(null);
+  const [language, setLanguage] = React.useState(null);
   const [guesses, setGuesses] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
   const [playing, setPlaying] = React.useState(false);
@@ -28,28 +31,52 @@ export default function PracticePage() {
     setPlayed(0);
   }, []);
 
-  const loadNew = React.useCallback(() => {
-    stopAudio();
-    setLoading(true);
-    setGuesses([]);
-    setSelected(null);
-    setFinished(false);
-    setSolved(false);
-    setAnswer(null);
-    practiceNew()
-      .then((s) => {
-        setSession(s);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-        toast.error("Could not open a practice case");
-      });
-  }, [stopAudio]);
+  const loadNew = React.useCallback(
+    (d, l) => {
+      const useD = d === undefined ? decade : d;
+      const useL = l === undefined ? language : l;
+      stopAudio();
+      setLoading(true);
+      setGuesses([]);
+      setSelected(null);
+      setFinished(false);
+      setSolved(false);
+      setAnswer(null);
+      const params = {};
+      if (useD) params.decade = useD;
+      if (useL) params.language = useL;
+      practiceNew(params)
+        .then((s) => {
+          setSession(s);
+          setLoading(false);
+        })
+        .catch((e) => {
+          setLoading(false);
+          toast.error(e?.response?.data?.detail || "Could not open a practice case");
+        });
+    },
+    [stopAudio, decade, language]
+  );
+
+  React.useEffect(() => {
+    practiceFilters().then(setFilters).catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     loadNew();
-  }, [loadNew]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pickDecade = (d) => {
+    const next = decade === d ? null : d;
+    setDecade(next);
+    loadNew(next, language);
+  };
+  const pickLanguage = (l) => {
+    const next = language === l ? null : l;
+    setLanguage(next);
+    loadNew(decade, next);
+  };
 
   const play = () => {
     const a = audioRef.current;
@@ -121,12 +148,62 @@ export default function PracticePage() {
           </h1>
         </div>
         <button
-          onClick={loadNew}
+          onClick={() => loadNew()}
           data-testid="practice-new-button"
           className="data-label text-[10px] text-sd-muted hover:text-sd-text flex items-center gap-1 transition-colors"
         >
           <RotateCcw className="w-3.5 h-3.5" /> New
         </button>
+      </div>
+
+      {/* Drill filters */}
+      <div className="mt-5 space-y-2.5" data-testid="practice-filters">
+        {filters.languages.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="data-label text-[10px] text-sd-muted w-16 shrink-0">Language</span>
+            {filters.languages.map((l) => {
+              const on = language === l;
+              return (
+                <button
+                  key={l}
+                  onClick={() => pickLanguage(l)}
+                  data-testid="practice-filter-language"
+                  className="rounded-full px-3 py-1 text-xs border transition-colors"
+                  style={{
+                    backgroundColor: on ? "var(--sd-elevated)" : "transparent",
+                    borderColor: on ? "var(--sd-text)" : "var(--sd-hairline)",
+                    color: on ? "var(--sd-text)" : "var(--sd-muted)",
+                  }}
+                >
+                  {l}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {filters.decades.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="data-label text-[10px] text-sd-muted w-16 shrink-0">Decade</span>
+            {filters.decades.map((d) => {
+              const on = decade === d;
+              return (
+                <button
+                  key={d}
+                  onClick={() => pickDecade(d)}
+                  data-testid="practice-filter-decade"
+                  className="rounded-full px-3 py-1 text-xs border transition-colors"
+                  style={{
+                    backgroundColor: on ? "var(--sd-elevated)" : "transparent",
+                    borderColor: on ? "var(--sd-text)" : "var(--sd-hairline)",
+                    color: on ? "var(--sd-text)" : "var(--sd-muted)",
+                  }}
+                >
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {loading || !session ? (
@@ -168,7 +245,7 @@ export default function PracticePage() {
             {solved ? `Cracked in ${guesses.length}` : `Ran out after ${MAX_ATTEMPTS}`}
           </div>
           <button
-            onClick={loadNew}
+            onClick={() => loadNew()}
             data-testid="practice-again-button"
             className="mt-6 w-full py-3.5 rounded-md font-display font-bold uppercase tracking-wide text-lg bg-sd-gold text-[#1A1108] hover:brightness-105 transition-all"
           >

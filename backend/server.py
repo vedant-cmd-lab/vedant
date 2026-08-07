@@ -348,13 +348,26 @@ async def _practice_public(doc: dict) -> dict:
     }
 
 
+@api_router.get("/practice/filters")
+async def practice_filters():
+    songs = await db.songs.find({}, {"decade": 1, "language": 1}).to_list(1000)
+    decades = sorted({(s.get("decade") or "").strip() for s in songs if (s.get("decade") or "").strip()})
+    languages = sorted({(s.get("language") or "").strip() for s in songs if (s.get("language") or "").strip()})
+    return {"decades": decades, "languages": languages}
+
+
 @api_router.post("/practice/new")
-async def practice_new():
-    ordered = await _ordered_song_ids()
-    if not ordered:
-        raise HTTPException(status_code=503, detail="No songs in the archive yet")
+async def practice_new(decade: Optional[str] = None, language: Optional[str] = None):
+    query = {}
+    if decade:
+        query["decade"] = decade
+    if language:
+        query["language"] = language
+    candidates = await db.songs.find(query, {"_id": 1}).to_list(1000)
+    if not candidates:
+        raise HTTPException(status_code=404, detail="No tracks match that filter")
     rng = random.Random()
-    answer_id = rng.choice(ordered)
+    answer_id = str(rng.choice(candidates)["_id"])
     option_ids = await _choose_option_ids(answer_id, rng)
     doc = {
         "session_id": str(uuid.uuid4()),
