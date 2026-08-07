@@ -1,0 +1,35 @@
+{
+  "summary": "Full backend + frontend test of Sur Detective. 11/11 backend pytest cases pass (puzzle/today shape, stability, archive, past/future case, guess correct+wrong, reveal, admin CRUD, CSV import). Frontend flow verified end-to-end on the daily case: waveform, play, 6 mcq options, wrong-guess grows clip 0:01→0:02, skip counts as attempt and grows clip 0:02→0:04, correct guess opens verdict screen with share grid & share button. Verdict persists after reload (localStorage). Archive tab lists 61 cases with 'archive-case' testids. Stats tab renders. Admin (/admin) lists songs, add-song and delete work. Fixed one backend bug affecting admin frontend integration: Song response returned '_id' instead of 'id'; refactored BaseDocument to expose 'id' and strip Mongo _id from all admin song responses.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/admin/songs*", "issue": "Was returning raw Mongo '_id' instead of 'id' due to Pydantic alias config. Fixed in server.py BaseDocument (from_mongo/to_mongo)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "None blocking. Optional: seeded CSV contains a non-Bollywood entry ('Smells Like Teen Spirit') which happens to be today's Case #219 answer — verify this is intentional for the noir Bollywood theme."
+  ],
+  "critical_code_review_comments": [
+    "server.py: get_or_create_puzzle does N+1 async Mongo fetches to score distractors (one find_one per candidate). Acceptable for 26 songs, but should batch with $in or $sample as catalog grows.",
+    "Admin routes are open (no auth) — flagged as intentional per spec ('academic prototype') but should be gated before real deploy.",
+    "CSV import upsert key is (title, artist); duplicates with slight punctuation differences would create dupes."
+  ],
+  "updated_files": [
+    "/app/backend/server.py",
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "None persisted. All TEST_ prefixed rows created during tests were cleaned up.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Case #219 (today, IST) = 'Smells Like Teen Spirit' per current seed order. Reveal endpoint can be used to drive UI tests. Admin list now returns 'id' field — do not revert BaseDocument."
+}

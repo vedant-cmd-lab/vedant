@@ -51,17 +51,20 @@ PyObjectId = Annotated[str, BeforeValidator(_validate_object_id)]
 
 class BaseDocument(BaseModel):
     model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
-    id: Optional[PyObjectId] = Field(default=None, alias="_id")
+    id: Optional[str] = None
 
     @classmethod
     def from_mongo(cls, doc):
         if not doc:
             return None
+        doc = dict(doc)
+        if "_id" in doc:
+            doc["id"] = str(doc.pop("_id"))
         return cls(**doc)
 
     def to_mongo(self):
-        d = self.model_dump(by_alias=True, exclude_none=True)
-        d.pop("_id", None)
+        d = self.model_dump(exclude_none=True)
+        d.pop("id", None)
         return d
 
 
