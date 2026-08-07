@@ -8,6 +8,7 @@ import csv
 import logging
 import hashlib
 import random
+import uuid
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, BeforeValidator
 from typing import List, Optional, Annotated, Any
@@ -126,6 +127,31 @@ async def _ordered_song_ids() -> List[str]:
     return ids
 
 
+async def _choose_option_ids(answer_id: str, rng: random.Random) -> List[str]:
+    """Pick distractors that strongly prefer the same language, then the same
+    decade, so the wrong leads feel plausible for the era."""
+    answer = await db.songs.find_one({"_id": ObjectId(answer_id)})
+    all_songs = await db.songs.find().to_list(1000)
+    lang = (answer.get("language") or "").lower()
+    dec = (answer.get("decade") or "").lower()
+    scored = []
+    for s in all_songs:
+        sid = str(s["_id"])
+        if sid == answer_id:
+            continue
+        score = 0.0
+        if lang and (s.get("language") or "").lower() == lang:
+            score += 10
+        if dec and (s.get("decade") or "").lower() == dec:
+            score += 5
+        scored.append((score + rng.random(), sid))
+    scored.sort(key=lambda t: t[0], reverse=True)
+    distractors = [sid for _, sid in scored[: NUM_OPTIONS - 1]]
+    option_ids = distractors + [answer_id]
+    rng.shuffle(option_ids)
+    return option_ids
+
+
 async def get_or_create_puzzle(number: int) -> dict:
     if number < 1:
         raise HTTPException(status_code=404, detail="Case not found")
@@ -141,35 +167,8 @@ async def get_or_create_puzzle(number: int) -> dict:
         raise HTTPException(status_code=503, detail="No songs in the archive yet")
 
     answer_id = ordered[(number - 1) % len(ordered)]
-    answer = await db.songs.find_one({"_id": ObjectId(answer_id)})
-
-    # Build option pool preferring same language, then decade, then anything.
     rng = random.Random(f"{SHUFFLE_SEED}:{number}")
-    others = [sid for sid in ordered if sid != answer_id]
-
-    async def _fetch(sid):
-        return await db.songs.find_one({"_id": ObjectId(sid)})
-
-    pool = []
-    for sid in others:
-        pool.append(sid)
-    # rank distractors by similarity for a fairer puzzle
-    lang = (answer.get("language") or "").lower()
-    dec = (answer.get("decade") or "").lower()
-    scored = []
-    for sid in pool:
-        s = await _fetch(sid)
-        score = 0
-        if (s.get("language") or "").lower() == lang:
-            score += 2
-        if (s.get("decade") or "").lower() == dec:
-            score += 1
-        scored.append((score + rng.random(), sid))
-    scored.sort(reverse=True)
-    distractors = [sid for _, sid in scored[: NUM_OPTIONS - 1]]
-
-    option_ids = distractors + [answer_id]
-    rng.shuffle(option_ids)
+    option_ids = await _choose_option_ids(answer_id, rng)
 
     doc = {
         "number": number,
@@ -327,6 +326,66 @@ async def admin_import_csv(file: UploadFile = File(...)):
             await db.songs.insert_one(data)
             inserted += 1
     return {"inserted": inserted, "updated": updated}
+
+
+# ---------------------------------------------------------------------------
+# Practice mode (free play, ephemeral sessions)
+# ---------------------------------------------------------------------------
+async def _practice_public(doc: dict) -> dict:
+    options = []
+    for sid in doc["option_ids"]:
+        s = await db.songs.find_one({"_id": ObjectId(sid)})
+        if s:
+            options.append({"id": sid, "title": s["title"], "artist": s["artist"]})
+    answer = await db.songs.find_one({"_id": ObjectId(doc["song_id"])})
+    return {
+        "session_id": doc["session_id"],
+        "clip_url": answer["preview_url"],
+        "clip_durations": CLIP_DURATIONS,
+        "max_attempts": MAX_ATTEMPTS,
+        "waveform_total_seconds": WAVEFORM_TOTAL_SECONDS,
+        "options": options,
+    }
+
+
+@api_router.post("/practice/new")
+async def practice_new():
+    ordered = await _ordered_song_ids()
+    if not ordered:
+        raise HTTPException(status_code=503, detail="No songs in the archive yet")
+    rng = random.Random()
+    answer_id = rng.choice(ordered)
+    option_ids = await _choose_option_ids(answer_id, rng)
+    doc = {
+        "session_id": str(uuid.uuid4()),
+        "song_id": answer_id,
+        "option_ids": option_ids,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.practice_sessions.insert_one(doc)
+    return await _practice_public(doc)
+
+
+@api_router.post("/practice/{session_id}/guess")
+async def practice_guess(session_id: str, body: GuessInput):
+    doc = await db.practice_sessions.find_one({"session_id": session_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Practice case not found")
+    correct = body.option_id == doc["song_id"]
+    resp = {"correct": correct}
+    if correct:
+        song = await db.songs.find_one({"_id": ObjectId(doc["song_id"])})
+        resp["answer"] = _reveal(song)
+    return resp
+
+
+@api_router.get("/practice/{session_id}/reveal")
+async def practice_reveal(session_id: str):
+    doc = await db.practice_sessions.find_one({"session_id": session_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Practice case not found")
+    song = await db.songs.find_one({"_id": ObjectId(doc["song_id"])})
+    return _reveal(song)
 
 
 app.include_router(api_router)

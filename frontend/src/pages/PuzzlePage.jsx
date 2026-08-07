@@ -7,6 +7,7 @@ import { VerdictScreen } from "@/components/VerdictScreen";
 import { getToday, getPuzzle, submitGuess, revealAnswer } from "@/lib/api";
 import { CLIP_DURATIONS, MAX_ATTEMPTS } from "@/lib/game";
 import { getProgress, saveProgress, recordFinish } from "@/lib/storage";
+import { useNav } from "@/lib/navContext";
 
 export default function PuzzlePage() {
   const { number: routeNumber } = useParams();
@@ -24,6 +25,13 @@ export default function PuzzlePage() {
   const finished = progress ? progress.finished : false;
   const clipIndex = Math.min(attemptsUsed, MAX_ATTEMPTS - 1);
   const clipSeconds = finished ? CLIP_DURATIONS[MAX_ATTEMPTS - 1] : CLIP_DURATIONS[clipIndex];
+
+  const { setHidden } = useNav();
+  React.useEffect(() => {
+    // hide the bottom nav while a round is actively being played
+    setHidden(!!puzzle && !error && !finished);
+    return () => setHidden(false);
+  }, [puzzle, error, finished, setHidden]);
 
   React.useEffect(() => {
     let alive = true;
@@ -182,6 +190,7 @@ export default function PuzzlePage() {
             score={progress.score}
             streak={progress.streak}
             previewUrl={puzzle.clip_url}
+            showNextTimer={!routeNumber}
           />
         </div>
       ) : (
@@ -203,10 +212,11 @@ export default function PuzzlePage() {
             <button
               onClick={play}
               data-testid="play-button"
-              className="h-16 w-16 rounded-full border-2 border-sd-hairline flex items-center justify-center text-sd-text hover:bg-sd-elevated transition-colors"
+              className="h-20 w-20 rounded-full flex items-center justify-center text-[#1A1108] transition-all hover:brightness-105 active:scale-95"
+              style={{ backgroundColor: "var(--sd-gold)", boxShadow: "0 10px 34px rgba(242,169,59,0.5)" }}
               aria-label={playing ? "Pause evidence" : "Play evidence"}
             >
-              {playing ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 ml-0.5" />}
+              {playing ? <Pause className="w-8 h-8" fill="#1A1108" /> : <Play className="w-8 h-8 ml-1" fill="#1A1108" />}
             </button>
           </div>
           <div className="text-center data-label text-[11px] text-sd-muted mt-3" data-testid="clip-length">

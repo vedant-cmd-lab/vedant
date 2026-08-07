@@ -2,9 +2,10 @@ import React from "react";
 import { toast } from "sonner";
 import { Share2, Play, Pause } from "lucide-react";
 import { ShareGrid, buildShareText } from "@/components/ShareGrid";
+import { NextCaseTimer } from "@/components/NextCaseTimer";
 import { MAX_ATTEMPTS } from "@/lib/game";
 
-export const VerdictScreen = ({ number, answer, solved, guessResults, score, streak, previewUrl }) => {
+export const VerdictScreen = ({ number, answer, solved, guessResults, score, streak, previewUrl, showNextTimer }) => {
   const audioRef = React.useRef(null);
   const [playing, setPlaying] = React.useState(false);
 
@@ -61,6 +62,13 @@ export const VerdictScreen = ({ number, answer, solved, guessResults, score, str
           {solved ? "Solved" : "Cold Case"}
         </div>
       </div>
+
+      {showNextTimer && (
+        <div className="text-center mb-6" data-testid="next-case-block">
+          <div className="data-label text-[10px] text-sd-muted mb-1">Next Case Unlocks In</div>
+          <NextCaseTimer />
+        </div>
+      )}
 
       {/* Evidence card */}
       <div className="bg-sd-surface border border-sd-hairline rounded-lg p-5 flex gap-4 items-center">

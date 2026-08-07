@@ -1,11 +1,12 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Disc3, Archive, BarChart3 } from "lucide-react";
+import { Disc3, Archive, BarChart3, Shuffle } from "lucide-react";
 
 const items = [
   { to: "/", label: "Case", icon: Disc3, testid: "nav-case", end: true },
   { to: "/archive", label: "Case File", icon: Archive, testid: "nav-archive" },
   { to: "/stats", label: "Record", icon: BarChart3, testid: "nav-stats" },
+  { to: "/practice", label: "Practice", icon: Shuffle, testid: "nav-practice" },
 ];
 
 export const BottomNav = () => {

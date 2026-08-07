@@ -23,4 +23,10 @@ export const adminImportCsv = (formData) =>
     headers: { "Content-Type": "multipart/form-data" },
   }).then((r) => r.data);
 
+// practice mode
+export const practiceNew = () => client.post(`/practice/new`).then((r) => r.data);
+export const practiceGuess = (sid, optionId) =>
+  client.post(`/practice/${sid}/guess`, { option_id: optionId }).then((r) => r.data);
+export const practiceReveal = (sid) => client.get(`/practice/${sid}/reveal`).then((r) => r.data);
+
 export default client;

@@ -1,0 +1,22 @@
+{
+  "summary": "Iteration 2 verified all new features. Backend: 17/17 pytest pass — added test_practice_and_distractors.py covering (a) POST /api/practice/new shape (session_id, clip_url, clip_durations, 6 options), (b) wrong guess {correct:false, no answer}, correct guess {correct:true, answer:{...}}, (c) unknown session_id => 404 for both /guess and /reveal, (d) each /practice/new yields a distinct session, (e) same-language distractor selection for BOTH /puzzle/today and /practice/new (5 practice samples). Regression backend_test.py (puzzle/today shape+stability, archive, past/future case, correct/wrong guess, reveal, admin CRUD + CSV import) all still green. Frontend end-to-end via Playwright on preview URL: nav is HIDDEN on active daily case (/), reappears after solving; next-case-timer visible in HH:MM:SS on verdict, ticks each second; next-case-block is NOT shown on /case/{past}. Practice flow works: /practice loads, 6 mcq options, selecting enables submit, wrong marks copper & disables it, skipping grows clip, finishing shows practice-result with stamp + practice-answer-title + practice-again-button that loads a NEW random case; practice-new-button top-right also loads fresh case. Bottom nav shows exactly 4 items (nav-case/nav-archive/nav-stats/nav-practice) on /archive, /stats, /practice with active label in gold (rgb(242,169,59)). Practice guesses do NOT update localStorage stats (PracticePage never calls recordFinish). Daily & practice play buttons are filled gold circles (bg rgb(242,169,59)).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_practice_and_distractors.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py practice_sessions collection has no TTL/cleanup — sessions persist in Mongo indefinitely. Consider TTL index on created_at for prod.",
+    "_choose_option_ids still does per-song find_one for _public_puzzle/_practice_public rendering; O(N_options) queries per fetch. Fine at 26 songs; batch with $in when catalog grows.",
+    "PracticePage doesn't preserve session across route changes — leaving /practice mid-round loses state (acceptable per 'no pressure' spec)."
+  ],
+  "updated_files": ["/app/backend/tests/test_practice_and_distractors.py"],
+  "success_rate": {"backend": "100% (17/17)", "frontend": "100%"},
+  "seed_data_creation": "None persisted. TEST_ admin rows were auto-cleaned by tests.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Case #219 today = 'Smells Like Teen Spirit'. Practice sessions are persisted in db.practice_sessions with uuid session_id. localStorage stats key is 'sd-stats-v1' — clear it (plus 'sd-progress-*') between UI runs to re-test the active-round nav hidden behavior."
+}
